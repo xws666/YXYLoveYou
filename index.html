@@ -15,24 +15,17 @@
       padding: 0;
       background-image: url('bg.png');
       background-size: cover;
-      /* 背景图填满整个屏幕 */
       background-repeat: no-repeat;
-      /* 不重复平铺 */
       background-position: center;
-      /* 居中显示 */
       height: 100vh;
-      /* 100% 视口高度 */
       font-family: sans-serif;
     }
 
     .modal-content input[type="text"],
     .modal-content textarea {
       box-sizing: border-box;
-      /* 关键：防止 padding 撑宽 */
       width: 100%;
-      /* 填满父容器 */
       padding: 8px 12px;
-      /* 左右边距，防止贴边 */
       font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -127,11 +120,8 @@
 
     .modal-input {
       box-sizing: border-box;
-      /* 关键：防止 padding 撑宽 */
       width: 100%;
-      /* 填满父容器 */
       padding: 8px 12px;
-      /* 左右边距，防止贴边 */
       font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -155,7 +145,6 @@
       width: 20vw;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-
 
     .modal-buttonss-cancel {
       background-color: #ffffff;
@@ -220,9 +209,14 @@
     const nameModal = document.getElementById('nameModal');
     const userNameInput = document.getElementById('userNameInput');
 
+    // 设置允许发帖和删除的用户名
+    const allowedUsernames = ["稳永远爱欣雨", "大皇帝", "稳永远爱欣雨宝宝", "小稳神"];
+
     let username = localStorage.getItem('username');
     if (!username) {
-      nameModal.style.display = 'flex';
+      username = "稳永远爱欣雨";
+      localStorage.setItem('username', username);
+      usernameDisplay.textContent = username;
     } else {
       usernameDisplay.textContent = username;
     }
@@ -236,6 +230,12 @@
     };
 
     usernameDisplay.onclick = () => {
+      const currentUser = localStorage.getItem('username') || '匿名用户';
+      if (!allowedUsernames.includes(currentUser)) {
+        alert("暂无权限进行此操作");
+        return;
+      }
+
       const current = localStorage.getItem('username') || '匿名用户';
       const newName = prompt('请输入新的名字：', current);
       if (newName && newName.trim()) {
@@ -245,6 +245,11 @@
     };
 
     openModalBtn.onclick = () => {
+      const currentUser = localStorage.getItem('username') || '匿名用户';
+      if (!allowedUsernames.includes(currentUser)) {
+        alert("暂无权限进行此操作");
+        return;
+      }
       modal.style.display = 'flex';
       postText.focus();
     };
@@ -256,8 +261,14 @@
 
     submitBtn.onclick = async () => {
       const content = postText.value.trim();
-      if (!content) return alert('请输入内容');
       const author = localStorage.getItem('username') || '匿名用户';
+
+      if (!allowedUsernames.includes(author)) {
+        alert("暂无权限进行此操作");
+        return;
+      }
+
+      if (!content) return alert('请输入内容');
 
       const Post = AV.Object.extend('Post');
       const post = new Post();
@@ -280,6 +291,12 @@
     }
 
     async function deletePost(objectId) {
+      const currentUser = localStorage.getItem('username') || '匿名用户';
+      if (!allowedUsernames.includes(currentUser)) {
+        alert("暂无权限进行此操作");
+        return;
+      }
+
       if (confirm("确定删除这条动态吗？")) {
         const post = AV.Object.createWithoutData('Post', objectId);
         await post.destroy();
@@ -297,7 +314,22 @@
           <button class="delete-btn" style="background: none; border: none; color: red; cursor: pointer;">删除</button>
         </div>
       `;
-      div.querySelector('.delete-btn').onclick = () => deletePost(post.id);
+
+      const deleteBtn = div.querySelector('.delete-btn');
+      const currentUser = localStorage.getItem('username') || '匿名用户';
+
+      deleteBtn.onclick = () => {
+        if (!allowedUsernames.includes(currentUser)) {
+          alert("暂无权限进行此操作");
+          return;
+        }
+
+        if (confirm("确定删除这条动态吗？")) {
+          const postObj = AV.Object.createWithoutData('Post', post.id);
+          postObj.destroy().then(() => loadPosts());
+        }
+      };
+
       feed.appendChild(div);
     }
 
