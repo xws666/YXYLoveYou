@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <title>宝宝爱你</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    .modal-content input[type="text"],
+    .modal-content textarea {
+      box-sizing: border-box;
+      /* 关键：防止 padding 撑宽 */
+      width: 100%;
+      /* 填满父容器 */
+      padding: 8px 12px;
+      /* 左右边距，防止贴边 */
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    nav {
+      background-color: #ffffff;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    nav h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    nav h1::after {
+      content: '';
+      display: block;
+      clear: both;
+    }
+
+    #usernameDisplay {
+      position: absolute;
+      right: 20px;
+      top: 18px;
+      font-size: 16px;
+      color: #333;
+      cursor: pointer;
+    }
+
+    #feed {
+      padding: 73px 13px 13px;
+    }
+
+    .card {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 15px;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007BFF;
+      color: white;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      font-size: 30px;
+      text-align: center;
+      line-height: 56px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+    }
+
+    .modal-content textarea,
+    .modal-content input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      resize: none;
+    }
+
+    .modal-input {
+      box-sizing: border-box;
+      /* 关键：防止 padding 撑宽 */
+      width: 100%;
+      /* 填满父容器 */
+      padding: 8px 12px;
+      /* 左右边距，防止贴边 */
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .modal-buttons {
+      text-align: right;
+    }
+
+    .modal-buttons button {
+      margin-left: 10px;
+    }
+
+    .modal-buttonss {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 20vw;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+
+    .modal-buttonss-cancel {
+      background-color: #ffffff;
+      color: rgb(116, 116, 116);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 20vw;
+      border: 1px solid #909192;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <h1>宝宝我爱你</h1>
+    <span id="usernameDisplay">请设置</span>
+  </nav>
+
+  <div id="feed"></div>
+
+  <div class="fab" id="openModal">+</div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3>发布内容</h3>
+      <textarea id="postText" placeholder="写点什么..."></textarea>
+      <div class="modal-buttons">
+        <button id="cancel" class="modal-buttonss-cancel">取消</button>
+        <button id="submit" class="modal-buttonss">发布</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="nameModal">
+    <div class="modal-content">
+      <h3>设置你的昵称</h3>
+      <input class="modal-input" type="text" id="userNameInput" placeholder="输入名字...">
+      <div class="modal-buttons">
+        <button id="saveName" class="modal-buttonss">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 初始化 LeanCloud
+    AV.init({
+      appId: "AV6jRVgHx1isT3AZtI3T89MK-gzGzoHsz",
+      appKey: "vK43fCMVaILWMf8tKJhiJCf5",
+      serverURL: "https://av6jrvgh.lc-cn-n1-shared.com"
+    });
+
+    const feed = document.getElementById('feed');
+    const modal = document.getElementById('modal');
+    const postText = document.getElementById('postText');
+    const submitBtn = document.getElementById('submit');
+    const cancelBtn = document.getElementById('cancel');
+    const openModalBtn = document.getElementById('openModal');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const nameModal = document.getElementById('nameModal');
+    const userNameInput = document.getElementById('userNameInput');
+
+    let username = localStorage.getItem('username');
+    if (!username) {
+      nameModal.style.display = 'flex';
+    } else {
+      usernameDisplay.textContent = username;
+    }
+
+    document.getElementById('saveName').onclick = () => {
+      const name = userNameInput.value.trim();
+      if (!name) return alert('请输入名字');
+      localStorage.setItem('username', name);
+      usernameDisplay.textContent = name;
+      nameModal.style.display = 'none';
+    };
+
+    usernameDisplay.onclick = () => {
+      const current = localStorage.getItem('username') || '匿名用户';
+      const newName = prompt('请输入新的名字：', current);
+      if (newName && newName.trim()) {
+        localStorage.setItem('username', newName.trim());
+        usernameDisplay.textContent = newName.trim();
+      }
+    };
+
+    openModalBtn.onclick = () => {
+      modal.style.display = 'flex';
+      postText.focus();
+    };
+
+    cancelBtn.onclick = () => {
+      modal.style.display = 'none';
+      postText.value = '';
+    };
+
+    submitBtn.onclick = async () => {
+      const content = postText.value.trim();
+      if (!content) return alert('请输入内容');
+      const author = localStorage.getItem('username') || '匿名用户';
+
+      const Post = AV.Object.extend('Post');
+      const post = new Post();
+      post.set('content', content);
+      post.set('author', author);
+      post.set('time', new Date().toLocaleString());
+      await post.save();
+
+      postText.value = '';
+      modal.style.display = 'none';
+      loadPosts();
+    };
+
+    async function loadPosts() {
+      feed.innerHTML = '';
+      const query = new AV.Query('Post');
+      query.descending('createdAt');
+      const posts = await query.find();
+      posts.forEach(renderPost);
+    }
+
+    async function deletePost(objectId) {
+      if (confirm("确定删除这条动态吗？")) {
+        const post = AV.Object.createWithoutData('Post', objectId);
+        await post.destroy();
+        loadPosts();
+      }
+    }
+
+    function renderPost(post) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <div style="font-size: 12px; color: gray; margin-bottom: 5px;">${post.get("time")}</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div><strong>${post.get("author")}：</strong>${post.get("content")}</div>
+          <button class="delete-btn" style="background: none; border: none; color: red; cursor: pointer;">删除</button>
+        </div>
+      `;
+      div.querySelector('.delete-btn').onclick = () => deletePost(post.id);
+      feed.appendChild(div);
+    }
+
+    loadPosts();
+  </script>
+</body>
+
+</html>
