@@ -11,24 +11,13 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
       background-image: url('bg.png');
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
-      height: 100vh;
-      font-family: sans-serif;
-    }
-
-    .modal-content input[type="text"],
-    .modal-content textarea {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      background-attachment: fixed;
+      min-height: 100vh;
+      padding-bottom: 80px;
     }
 
     nav {
@@ -45,12 +34,6 @@
     nav h1 {
       margin: 0;
       font-size: 20px;
-    }
-
-    nav h1::after {
-      content: '';
-      display: block;
-      clear: both;
     }
 
     #usernameDisplay {
@@ -72,22 +55,6 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       margin-bottom: 15px;
-    }
-
-    .fab {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #007BFF;
-      color: white;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      font-size: 30px;
-      text-align: center;
-      line-height: 56px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .modal {
@@ -116,15 +83,6 @@
       padding: 8px;
       margin-bottom: 10px;
       resize: none;
-    }
-
-    .modal-input {
-      box-sizing: border-box;
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
     }
 
     .modal-buttons {
@@ -157,6 +115,83 @@
       border: 1px solid #909192;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: white;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .nav-left {
+      font-size: 28px;
+      color: red;
+      user-select: none;
+      padding: 0px 20px;
+    }
+
+    .nav-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0px 20px;
+    }
+
+    .nav-right .plus {
+      font-size: 20px;
+      color: white;
+      background-color: #007bff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      line-height: 24px;
+      text-align: center;
+    }
+
+    .nav-right .label {
+      font-size: 12px;
+      color: #007bff;
+      margin-top: 2px;
+    }
+
+    #loveMessage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 26px;
+      color: rgb(255, 0, 0);
+      text-align: center;
+      z-index: 9999;
+      background: rgb(255 255 255 / 36%);
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #ffffff;
+      width: 60vw;
+      -webkit-text-stroke: 0.3px rgb(255, 255, 255);
+      font-weight: bold;
+    }
+
+    .bottom-nav .nav-left .heart {
+      font-size: 24px;
+      color: red;
+      margin-bottom: 2px;
+    }
+
+    .bottom-nav .nav-left .label{
+      font-size: 12px;
+      color: #ff0000;
+      margin-top: 2px;
+    }
   </style>
 </head>
 
@@ -167,8 +202,13 @@
   </nav>
 
   <div id="feed"></div>
+  <div id="loveMessage" style="display: none;">
+    于欣雨，我爱你！<br>
+    <div style="font-size: 14px; color: rgb(255, 59, 59); margin-top: 5px;-webkit-text-stroke: 0px rgb(255, 255, 255);">
+      Yu Xinyu, I love you!
+    </div>
+  </div>
 
-  <div class="fab" id="openModal">+</div>
 
   <div class="modal" id="modal">
     <div class="modal-content">
@@ -191,9 +231,19 @@
     </div>
   </div>
 
-  <script>
-    // 初始化 LeanCloud
-    AV.init({
+  <div class="bottom-nav">
+    <div class="nav-left" id="loveBtn">
+      <div class="heart">❤</div>
+      <div class="label">爱你</div>
+    </div>
+    <div class="nav-right" id="openModal">
+      <div class="plus">＋</div>
+      <div class="label">发布</div>
+    </div>
+  </div>
+
+  
+  <script>AV.init({
       appId: "AV6jRVgHx1isT3AZtI3T89MK-gzGzoHsz",
       appKey: "vK43fCMVaILWMf8tKJhiJCf5",
       serverURL: "https://av6jrvgh.lc-cn-n1-shared.com"
@@ -208,18 +258,17 @@
     const usernameDisplay = document.getElementById('usernameDisplay');
     const nameModal = document.getElementById('nameModal');
     const userNameInput = document.getElementById('userNameInput');
+    const loveBtn = document.getElementById('loveBtn');
+    const loveMessage = document.getElementById('loveMessage');
 
-    // 设置允许发帖和删除的用户名
     const allowedUsernames = ["稳永远爱欣雨", "大皇帝", "稳永远爱欣雨宝宝", "小稳神"];
 
     let username = localStorage.getItem('username');
     if (!username) {
       username = "稳永远爱欣雨";
       localStorage.setItem('username', username);
-      usernameDisplay.textContent = username;
-    } else {
-      usernameDisplay.textContent = username;
     }
+    usernameDisplay.textContent = username;
 
     document.getElementById('saveName').onclick = () => {
       const name = userNameInput.value.trim();
@@ -236,8 +285,7 @@
         return;
       }
 
-      const current = localStorage.getItem('username') || '匿名用户';
-      const newName = prompt('请输入新的名字：', current);
+      const newName = prompt('请输入新的名字：', currentUser);
       if (newName && newName.trim()) {
         localStorage.setItem('username', newName.trim());
         usernameDisplay.textContent = newName.trim();
@@ -283,11 +331,24 @@
     };
 
     async function loadPosts() {
-      feed.innerHTML = '';
       const query = new AV.Query('Post');
       query.descending('createdAt');
       const posts = await query.find();
-      posts.forEach(renderPost);
+      feed.innerHTML = '';
+      posts.forEach(post => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+      <div style="font-size: 12px; color: gray; margin-bottom: 5px;">${post.get("time")}</div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div><strong>${post.get("author")}：</strong>${post.get("content")}</div>
+        <button class="delete-btn" style="background: none; border: none; color: red; cursor: pointer;">删除</button>
+      </div>
+    `;
+        const deleteBtn = div.querySelector('.delete-btn');
+        deleteBtn.onclick = () => deletePost(post.id);
+        feed.appendChild(div);
+      });
     }
 
     async function deletePost(objectId) {
@@ -296,7 +357,6 @@
         alert("暂无权限进行此操作");
         return;
       }
-
       if (confirm("确定删除这条动态吗？")) {
         const post = AV.Object.createWithoutData('Post', objectId);
         await post.destroy();
@@ -304,34 +364,25 @@
       }
     }
 
-    function renderPost(post) {
-      const div = document.createElement('div');
-      div.className = 'card';
-      div.innerHTML = `
-        <div style="font-size: 12px; color: gray; margin-bottom: 5px;">${post.get("time")}</div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div><strong>${post.get("author")}：</strong>${post.get("content")}</div>
-          <button class="delete-btn" style="background: none; border: none; color: red; cursor: pointer;">删除</button>
-        </div>
-      `;
+    // ✅ 长按❤显示“我爱你...”文字，松开后恢复
+    loveBtn.addEventListener('touchstart', () => {
+      feed.style.display = 'none';
+      loveMessage.style.display = 'block';
+    });
+    loveBtn.addEventListener('touchend', () => {
+      loveMessage.style.display = 'none';
+      feed.style.display = 'block';
+    });
 
-      const deleteBtn = div.querySelector('.delete-btn');
-      const currentUser = localStorage.getItem('username') || '匿名用户';
-
-      deleteBtn.onclick = () => {
-        if (!allowedUsernames.includes(currentUser)) {
-          alert("暂无权限进行此操作");
-          return;
-        }
-
-        if (confirm("确定删除这条动态吗？")) {
-          const postObj = AV.Object.createWithoutData('Post', post.id);
-          postObj.destroy().then(() => loadPosts());
-        }
-      };
-
-      feed.appendChild(div);
-    }
+    // 同样适配鼠标操作
+    loveBtn.addEventListener('mousedown', () => {
+      feed.style.display = 'none';
+      loveMessage.style.display = 'block';
+    });
+    loveBtn.addEventListener('mouseup', () => {
+      loveMessage.style.display = 'none';
+      feed.style.display = 'block';
+    });
 
     loadPosts();
   </script>
