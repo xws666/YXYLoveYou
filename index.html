@@ -7,11 +7,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
   <style>
+    * {
+      -webkit-user-select: none;
+      /* 移动端 Safari 和 Chrome */
+      -webkit-touch-callout: none;
+      /* 禁用 iOS 长按弹出菜单 */
+      user-select: none;
+      /* 标准语法 */
+      -moz-user-select: none;
+      /* Firefox */
+      -ms-user-select: none;
+      /* IE/Edge */
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background-color: #f4f4f4;
-      background-image: url('bg.png');
+      /* background-image: url('bg.png'); */
+      background-image: url('https://s21.ax1x.com/2025/07/24/pVG46ld.jpg');
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
@@ -128,6 +142,9 @@
       justify-content: space-between;
       align-items: center;
       z-index: 100;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      user-select: none;
     }
 
     .nav-left {
@@ -187,7 +204,7 @@
       margin-bottom: 2px;
     }
 
-    .bottom-nav .nav-left .label{
+    .bottom-nav .nav-left .label {
       font-size: 12px;
       color: #ff0000;
       margin-top: 2px;
@@ -242,7 +259,7 @@
     </div>
   </div>
 
-  
+
   <script>AV.init({
       appId: "AV6jRVgHx1isT3AZtI3T89MK-gzGzoHsz",
       appKey: "vK43fCMVaILWMf8tKJhiJCf5",
